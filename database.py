@@ -194,3 +194,120 @@ async def get_users_count():
     await db.close()
 
     return count[0]
+
+from datetime import datetime
+
+
+async def save_ai_history(user_id, action, file_id):
+    db = await connect()
+
+    await db.execute("""
+        INSERT INTO ai_history(
+            user_id,
+            action,
+            file_id,
+            created_at
+        )
+        VALUES(?,?,?,?)
+    """, (
+        user_id,
+        action,
+        file_id,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+
+    await db.commit()
+    await db.close()
+
+
+async def add_payment(user_id, amount, payment_type, status):
+    db = await connect()
+
+    await db.execute("""
+        INSERT INTO payments(
+            user_id,
+            amount,
+            payment_type,
+            status,
+            created_at
+        )
+        VALUES(?,?,?,?,?)
+    """, (
+        user_id,
+        amount,
+        payment_type,
+        status,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+
+    await db.commit()
+    await db.close()
+
+
+async def save_log(level, message):
+    db = await connect()
+
+    await db.execute("""
+        INSERT INTO logs(
+            level,
+            message,
+            created_at
+        )
+        VALUES(?,?,?)
+    """, (
+        level,
+        message,
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ))
+
+    await db.commit()
+    await db.close()
+
+
+async def get_statistics():
+    db = await connect()
+
+    cursor = await db.execute("""
+        SELECT COUNT(*)
+        FROM users
+    """)
+
+    users = (await cursor.fetchone())[0]
+
+    cursor = await db.execute("""
+        SELECT COUNT(*)
+        FROM payments
+    """)
+
+    payments = (await cursor.fetchone())[0]
+
+    cursor = await db.execute("""
+        SELECT COUNT(*)
+        FROM ai_history
+    """)
+
+    ai = (await cursor.fetchone())[0]
+
+    await db.close()
+
+    return {
+        "users": users,
+        "payments": payments,
+        "ai": ai
+    }
+
+
+async def update_last_active(user_id):
+    db = await connect()
+
+    await db.execute("""
+        UPDATE users
+        SET last_active=?
+        WHERE user_id=?
+    """, (
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        user_id
+    ))
+
+    await db.commit()
+    await db.close()
