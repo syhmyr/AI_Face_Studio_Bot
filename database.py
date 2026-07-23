@@ -100,3 +100,97 @@ async def add_user(user_id, username, full_name):
 
     await db.commit()
     await db.close()
+
+async def get_user(user_id):
+    db = await connect()
+
+    cursor = await db.execute("""
+        SELECT * FROM users
+        WHERE user_id = ?
+    """, (user_id,))
+
+    user = await cursor.fetchone()
+
+    await db.close()
+
+    return user
+
+
+async def update_balance(user_id, amount):
+    db = await connect()
+
+    await db.execute("""
+        UPDATE users
+        SET balance = balance + ?
+        WHERE user_id = ?
+    """, (amount, user_id))
+
+    await db.commit()
+    await db.close()
+
+
+async def set_balance(user_id, amount):
+    db = await connect()
+
+    await db.execute("""
+        UPDATE users
+        SET balance = ?
+        WHERE user_id = ?
+    """, (amount, user_id))
+
+    await db.commit()
+    await db.close()
+
+
+async def ban_user(user_id):
+    db = await connect()
+
+    await db.execute("""
+        UPDATE users
+        SET banned = 1
+        WHERE user_id = ?
+    """, (user_id,))
+
+    await db.commit()
+    await db.close()
+
+
+async def unban_user(user_id):
+    db = await connect()
+
+    await db.execute("""
+        UPDATE users
+        SET banned = 0
+        WHERE user_id = ?
+    """, (user_id,))
+
+    await db.commit()
+    await db.close()
+
+
+async def set_premium(user_id, status=1):
+    db = await connect()
+
+    await db.execute("""
+        UPDATE users
+        SET premium = ?
+        WHERE user_id = ?
+    """, (status, user_id))
+
+    await db.commit()
+    await db.close()
+
+
+async def get_users_count():
+    db = await connect()
+
+    cursor = await db.execute("""
+        SELECT COUNT(*)
+        FROM users
+    """)
+
+    count = await cursor.fetchone()
+
+    await db.close()
+
+    return count[0]
